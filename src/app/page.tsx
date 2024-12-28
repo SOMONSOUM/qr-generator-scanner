@@ -21,11 +21,11 @@ export default function Home() {
           "grid grid-cols-1 md:grid-cols-2 gap-8"
         )}
       >
-        {/* QR Code Generator Section */}
-        <QrGenerator size={size} setSize={setSize} />
-
         {/* QR Code Scanner Section */}
         <QRScanner size={size} />
+
+        {/* QR Code Generator Section */}
+        <QrGenerator size={size} setSize={setSize} />
       </div>
     </main>
   );
