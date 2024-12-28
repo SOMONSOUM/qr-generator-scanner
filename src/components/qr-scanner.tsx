@@ -4,7 +4,6 @@ import { useState, useRef, useEffect } from "react";
 import QrScanner from "qr-scanner";
 import { cn } from "@/lib/utils";
 import { CameraIcon, SwitchCameraIcon, Flashlight } from "lucide-react";
-import { motion } from "motion/react";
 import useMediaQuery from "../hooks/use-media-query";
 import {
   AlertDialog,
@@ -22,7 +21,6 @@ const QRScanner = ({ size }: { size: number }) => {
   const fileRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const qrScannerRef = useRef<QrScanner | null>(null);
-  const overlayRef = useRef<HTMLDivElement>(null);
 
   const [qrdata, setQrdata] = useState<string | null>(null);
   const [isCameraActive, setIsCameraActive] = useState<boolean>(false);
@@ -132,10 +130,9 @@ const QRScanner = ({ size }: { size: number }) => {
           },
           {
             returnDetailedScanResult: true,
-            highlightScanRegion: false,
-            highlightCodeOutline: true,
+            highlightScanRegion: true,
+            highlightCodeOutline: false,
             calculateScanRegion,
-            overlay: overlayRef.current || undefined,
           }
         );
 
@@ -180,7 +177,6 @@ const QRScanner = ({ size }: { size: number }) => {
       }
     }
   };
-  console.log({ qrdata });
 
   const closeDialog = async () => {
     setQrdata(null);
@@ -196,31 +192,19 @@ const QRScanner = ({ size }: { size: number }) => {
         QR Code Scanner
       </h2>
       <div className={cn("space-y-4 sm:space-y-6")}>
-        <button
-          onClick={() => fileRef.current?.click()}
+        <div
           className={cn(
-            "w-full bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 sm:py-3 rounded-lg shadow-md transition text-sm sm:text-base"
+            "relative mx-auto",
+            isCameraActive ? "block" : "hidden"
           )}
         >
-          Upload QR Code
-        </button>
-        <input
-          ref={fileRef}
-          type="file"
-          accept=".png,.jpg,.jpeg"
-          onChange={handleFileChange}
-          className={cn("hidden")}
-        />
-
-        <button
-          onClick={isCameraActive ? stopCamera : startCamera}
-          className={cn(
-            "w-full bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 sm:py-3 rounded-lg shadow-md transition flex items-center justify-center text-sm sm:text-base"
-          )}
-        >
-          <CameraIcon className="mr-2" />
-          {isCameraActive ? "Stop Camera" : "Scan QR Code"}
-        </button>
+          <video
+            ref={videoRef}
+            className={cn("rounded-lg border border-gray-300 shadow-lg")}
+            width={videoSize.width}
+            height={videoSize.height}
+          />
+        </div>
 
         {isCameraActive && (
           <div className={cn("flex space-x-4")}>
@@ -244,37 +228,31 @@ const QRScanner = ({ size }: { size: number }) => {
           </div>
         )}
 
-        <div
+        <button
+          onClick={isCameraActive ? stopCamera : startCamera}
           className={cn(
-            "relative mx-auto",
-            isCameraActive ? "block" : "hidden"
+            "w-full bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 sm:py-3 rounded-lg shadow-md transition flex items-center justify-center text-sm sm:text-base"
           )}
         >
-          <video
-            ref={videoRef}
-            className={cn("rounded-lg border border-gray-300 shadow-lg")}
-            width={videoSize.width}
-            height={videoSize.height}
-          />
-          <motion.div
-            ref={overlayRef}
-            transition={{
-              duration: 1.5,
-              repeat: Infinity,
-              ease: "easeInOut",
-            }}
-            initial={{ scale: 0.8, opacity: 0.5 }}
-            animate={{
-              scale: [0.8, 1, 0.8],
-              opacity: [0.5, 1, 0.5],
-            }}
-          >
-            <div className="absolute -top-1 -left-1 w-10 h-10 border-t-[4px] border-l-[4px] border-white rounded-tl-3xl" />
-            <div className="absolute -top-1 -right-1 w-10 h-10 border-t-[4px] border-r-[4px] border-white rounded-tr-3xl" />
-            <div className="absolute -bottom-1 -left-1 w-10 h-10 border-b-[4px] border-l-[4px] border-white rounded-bl-3xl" />
-            <div className="absolute -bottom-1 -right-1 w-10 h-10 border-b-[4px] border-r-[4px] border-white rounded-br-3xl" />
-          </motion.div>
-        </div>
+          <CameraIcon className="mr-2" />
+          {isCameraActive ? "Stop Camera" : "Scan QR Code"}
+        </button>
+
+        <button
+          onClick={() => fileRef.current?.click()}
+          className={cn(
+            "w-full bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 sm:py-3 rounded-lg shadow-md transition text-sm sm:text-base"
+          )}
+        >
+          Upload QR Code
+        </button>
+        <input
+          ref={fileRef}
+          type="file"
+          accept=".png,.jpg,.jpeg"
+          onChange={handleFileChange}
+          className={cn("hidden")}
+        />
       </div>
 
       <AlertDialog open={!!qrdata} onOpenChange={() => qrdata && closeDialog()}>
