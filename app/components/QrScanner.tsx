@@ -1,14 +1,21 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import QrScanner from "qr-scanner";
 import { cn } from "@/app/lib/utils";
-import { CameraIcon, SwitchCameraIcon, Flashlight } from "lucide-react";
+import {
+  CameraIcon,
+  SwitchCameraIcon,
+  Flashlight,
+  CopyIcon,
+} from "lucide-react";
+import { motion } from "framer-motion";
 
 const QrScannerComponent = ({ size }: { size: number }) => {
   const fileRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const qrScannerRef = useRef<QrScanner | null>(null);
+  const overlayRef = useRef<HTMLDivElement>(null);
 
   const [qrdata, setQrdata] = useState<string | null>(null);
   const [isCameraActive, setIsCameraActive] = useState<boolean>(false);
@@ -16,6 +23,35 @@ const QrScannerComponent = ({ size }: { size: number }) => {
     "environment"
   );
   const [isFlashlightOn, setIsFlashlightOn] = useState<boolean>(false);
+  const [videoSize, setVideoSize] = useState({ width: size, height: size });
+
+  useEffect(() => {
+    const updateVideoSize = () => {
+      if (videoRef.current) {
+        const aspectRatio = window.innerWidth / window.innerHeight;
+        let newWidth, newHeight;
+
+        if (aspectRatio > 1) {
+          // Landscape
+          newHeight = Math.min(window.innerHeight * 0.7, size);
+          newWidth = newHeight;
+        } else {
+          // Portrait
+          newWidth = Math.min(window.innerWidth * 0.9, size);
+          newHeight = newWidth;
+        }
+
+        setVideoSize({ width: newWidth, height: newHeight });
+      }
+    };
+
+    updateVideoSize();
+    window.addEventListener("resize", updateVideoSize);
+
+    return () => {
+      window.removeEventListener("resize", updateVideoSize);
+    };
+  }, [size]);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -54,7 +90,12 @@ const QrScannerComponent = ({ size }: { size: number }) => {
             setIsCameraActive(false);
             setIsFlashlightOn(false);
           },
-          { returnDetailedScanResult: true }
+          {
+            returnDetailedScanResult: true,
+            highlightScanRegion: true,
+            highlightCodeOutline: true,
+            overlay: overlayRef.current || undefined,
+          }
         );
 
         qrScannerRef.current.start();
@@ -102,17 +143,17 @@ const QrScannerComponent = ({ size }: { size: number }) => {
   return (
     <section
       className={cn(
-        "flex flex-col bg-gray-50 border border-gray-200 rounded-lg p-6 shadow-lg"
+        "flex flex-col bg-gray-50 border border-gray-200 rounded-lg p-4 sm:p-6 shadow-lg"
       )}
     >
-      <h2 className={cn("text-3xl font-bold text-gray-800 mb-4")}>
+      <h2 className={cn("text-2xl sm:text-3xl font-bold text-gray-800 mb-4")}>
         QR Code Scanner
       </h2>
-      <div className={cn("space-y-6")}>
+      <div className={cn("space-y-4 sm:space-y-6")}>
         <button
           onClick={() => fileRef.current?.click()}
           className={cn(
-            "w-full bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-3 rounded-lg shadow-md transition"
+            "w-full bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 sm:py-3 rounded-lg shadow-md transition text-sm sm:text-base"
           )}
         >
           Upload QR Code
@@ -128,7 +169,7 @@ const QrScannerComponent = ({ size }: { size: number }) => {
         <button
           onClick={isCameraActive ? stopCamera : startCamera}
           className={cn(
-            "w-full bg-teal-600 hover:bg-teal-700 text-white px-4 py-3 rounded-lg shadow-md transition flex items-center justify-center"
+            "w-full bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 sm:py-3 rounded-lg shadow-md transition flex items-center justify-center text-sm sm:text-base"
           )}
         >
           <CameraIcon className="mr-2" />
@@ -140,65 +181,83 @@ const QrScannerComponent = ({ size }: { size: number }) => {
             <button
               onClick={switchCamera}
               className={cn(
-                "flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-lg shadow-md transition flex items-center justify-center"
+                "flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 sm:py-3 rounded-lg shadow-md transition flex items-center justify-center text-sm sm:text-base"
               )}
             >
               <SwitchCameraIcon className="mr-2" />
-              Switch Camera
             </button>
             <button
               onClick={toggleFlashlight}
               className={cn(
-                "flex-1 bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-3 rounded-lg shadow-md transition flex items-center justify-center",
+                "flex-1 bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 sm:py-3 rounded-lg shadow-md transition flex items-center justify-center text-sm sm:text-base",
                 isFlashlightOn && "bg-yellow-700"
               )}
             >
               <Flashlight className="mr-2" />
-              {isFlashlightOn ? "Turn Off Flashlight" : "Turn On Flashlight"}
             </button>
           </div>
         )}
 
-        <video
-          ref={videoRef}
+        <div
           className={cn(
-            `mx-auto rounded-lg border border-gray-300 shadow-lg mt-4`
+            "relative mx-auto",
+            isCameraActive ? "block" : "hidden"
           )}
-          width={isCameraActive ? size : "0px"}
-          height={isCameraActive ? size : "0px"}
-        />
+        >
+          <video
+            ref={videoRef}
+            className={cn("rounded-lg border border-gray-300 shadow-lg")}
+            width={videoSize.width}
+            height={videoSize.height}
+          />
+          <motion.div
+            ref={overlayRef}
+            transition={{
+              duration: 1.5,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
+            initial={{ scale: 0.8, opacity: 0.5 }}
+            animate={{
+              scale: [0.8, 1, 0.8],
+              opacity: [0.5, 1, 0.5],
+            }}
+          >
+            <div className="absolute -top-1 -left-1 w-12 h-12 border-t-[4px] border-l-[4px] border-white rounded-tl-3xl" />
+            <div className="absolute -top-1 -right-1 w-12 h-12 border-t-[4px] border-r-[4px] border-white rounded-tr-3xl" />
+            <div className="absolute -bottom-1 -left-1 w-12 h-12 border-b-[4px] border-l-[4px] border-white rounded-bl-3xl" />
+            <div className="absolute -bottom-1 -right-1 w-12 h-12 border-b-[4px] border-r-[4px] border-white rounded-br-3xl" />
+          </motion.div>
+        </div>
       </div>
       {qrdata && (
         <div
           className={cn(
-            "relative mt-6 p-6 bg-gray-100 border border-gray-300 rounded-lg shadow-md"
+            "relative mt-4 sm:mt-6 p-4 sm:p-6 bg-gray-100 border border-gray-300 rounded-lg shadow-md"
           )}
         >
           <button
             onClick={copyToClipboard}
             className={cn(
-              "absolute top-3 right-3 p-2 text-gray-600 hover:text-gray-800 transition"
+              "absolute top-2 right-2 sm:top-3 sm:right-3 p-2 text-gray-600 hover:text-gray-800 transition"
             )}
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className={cn("h-6 w-6")}
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M8 16h8M8 12h8M8 8h8m-4-4v4M4 16v4h4M4 8v4M4 4h4v4M16 4h4v4m0 8v4h-4m4 0h-4m-8 4h8m4-4v4m0-8v4M4 16v4"
-              />
-            </svg>
+            <CopyIcon />
           </button>
-          <h3 className={cn("text-xl font-semibold text-gray-800 text-center")}>
+          <h3
+            className={cn(
+              "text-lg sm:text-xl font-semibold text-gray-800 text-center"
+            )}
+          >
             Scanned QR Data
           </h3>
-          <p className={cn("mt-2 text-gray-700 break-words")}>{qrdata}</p>
+          <p
+            className={cn(
+              "mt-2 text-gray-700 break-words text-sm sm:text-base"
+            )}
+          >
+            {qrdata}
+          </p>
         </div>
       )}
     </section>

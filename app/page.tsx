@@ -7,7 +7,7 @@ import { cn } from "@/app/lib/utils";
 import QrGeneratorComponent from "@/app/components/QrGenerator";
 
 export default function Home() {
-  const [size, setSize] = useState<number>(250);
+  const [size, setSize] = useState<number>(350);
 
   return (
     <main
