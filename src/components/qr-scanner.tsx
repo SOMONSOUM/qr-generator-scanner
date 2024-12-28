@@ -89,6 +89,7 @@ const QRScanner = ({ size }: { size: number }) => {
       });
       setQrdata(responseQrdata.data);
     } catch (error) {
+      console.log(error);
       toast.error("រកមិនឃើញ QR ដើម្បីស្កែនទេ!", {
         duration: 3000,
         position: "top-right",
