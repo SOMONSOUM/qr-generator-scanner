@@ -110,8 +110,9 @@ const QrScannerComponent = ({ size }: { size: number }) => {
           },
           {
             returnDetailedScanResult: true,
-            highlightScanRegion: true,
-            highlightCodeOutline: true,
+            highlightScanRegion: false,
+            highlightCodeOutline: false,
+            calculateScanRegion,
             overlay: overlayRef.current || undefined,
           }
         );
