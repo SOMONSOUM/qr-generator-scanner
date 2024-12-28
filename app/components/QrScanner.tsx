@@ -3,7 +3,7 @@
 import { useState, useRef } from "react";
 import QrScanner from "qr-scanner";
 import { cn } from "@/app/lib/utils";
-import { CameraIcon, SwitchCameraIcon } from "lucide-react";
+import { CameraIcon, SwitchCameraIcon, Flashlight } from "lucide-react";
 
 const QrScannerComponent = ({ size }: { size: number }) => {
   const fileRef = useRef<HTMLInputElement>(null);
@@ -13,8 +13,9 @@ const QrScannerComponent = ({ size }: { size: number }) => {
   const [qrdata, setQrdata] = useState<string | null>(null);
   const [isCameraActive, setIsCameraActive] = useState<boolean>(false);
   const [currentCamera, setCurrentCamera] = useState<"user" | "environment">(
-    "user"
+    "environment"
   );
+  const [isFlashlightOn, setIsFlashlightOn] = useState<boolean>(false);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -51,6 +52,7 @@ const QrScannerComponent = ({ size }: { size: number }) => {
             setQrdata(result.data);
             qrScannerRef.current?.stop();
             setIsCameraActive(false);
+            setIsFlashlightOn(false);
           },
           { returnDetailedScanResult: true }
         );
@@ -74,12 +76,27 @@ const QrScannerComponent = ({ size }: { size: number }) => {
       videoRef.current.srcObject = null;
     }
     setIsCameraActive(false);
+    setIsFlashlightOn(false);
   };
 
   const switchCamera = async () => {
-    stopCamera();
-    setCurrentCamera(currentCamera === "user" ? "environment" : "user");
+    setCurrentCamera(currentCamera === "environment" ? "user" : "environment");
     await startCamera();
+  };
+
+  const toggleFlashlight = async () => {
+    if (qrScannerRef.current) {
+      try {
+        if (isFlashlightOn) {
+          await qrScannerRef.current.turnFlashOff();
+        } else {
+          await qrScannerRef.current.turnFlashOn();
+        }
+        setIsFlashlightOn(!isFlashlightOn);
+      } catch (error) {
+        console.error("Error toggling flashlight:", error);
+      }
+    }
   };
 
   return (
@@ -119,15 +136,27 @@ const QrScannerComponent = ({ size }: { size: number }) => {
         </button>
 
         {isCameraActive && (
-          <button
-            onClick={switchCamera}
-            className={cn(
-              "w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-lg shadow-md transition flex items-center justify-center"
-            )}
-          >
-            <SwitchCameraIcon className="mr-2" />
-            Switch Camera
-          </button>
+          <div className={cn("flex space-x-4")}>
+            <button
+              onClick={switchCamera}
+              className={cn(
+                "flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-lg shadow-md transition flex items-center justify-center"
+              )}
+            >
+              <SwitchCameraIcon className="mr-2" />
+              Switch Camera
+            </button>
+            <button
+              onClick={toggleFlashlight}
+              className={cn(
+                "flex-1 bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-3 rounded-lg shadow-md transition flex items-center justify-center",
+                isFlashlightOn && "bg-yellow-700"
+              )}
+            >
+              <Flashlight className="mr-2" />
+              {isFlashlightOn ? "Turn Off Flashlight" : "Turn On Flashlight"}
+            </button>
+          </div>
         )}
 
         <video
