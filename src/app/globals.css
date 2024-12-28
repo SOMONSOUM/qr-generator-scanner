@@ -8,7 +8,7 @@ body {
   .scan-region-highlight .scan-region-highlight-svg,
   .scan-region-highlight .code-outline-highlight {
     stroke: #ffffff !important;
-    stroke-width: 8px !important;
+    /* stroke-width: 8px !important; */
   }
 }
 
