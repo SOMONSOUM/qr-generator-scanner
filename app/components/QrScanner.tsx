@@ -27,13 +27,15 @@ const QrScannerComponent = ({ size }: { size: number }) => {
   const [videoSize, setVideoSize] = useState({ width: size, height: size });
   const isMobile = useMediaQuery("(max-width: 768px)");
 
-  const calculateScanRegion = (): QrScanner.ScanRegion => {
-    const smallestDimension = Math.min(window.innerWidth, window.innerHeight);
+  const calculateScanRegion = (
+    video: HTMLVideoElement
+  ): QrScanner.ScanRegion => {
+    const smallestDimension = Math.min(video.videoWidth, video.videoHeight);
     const scanRegionSize = isMobile
-      ? Math.round(smallestDimension * 0.6)
-      : Math.round(smallestDimension * 0.4);
-    const offsetX = Math.round((window.innerWidth - scanRegionSize) / 2);
-    const offsetY = Math.round((window.innerHeight - scanRegionSize) / 2);
+      ? Math.round(smallestDimension * 0.9)
+      : Math.round(smallestDimension * 0.8);
+    const offsetX = Math.round((video.videoWidth - scanRegionSize) / 2);
+    const offsetY = Math.round((video.videoHeight - scanRegionSize) / 2);
 
     return {
       x: offsetX,
@@ -111,7 +113,7 @@ const QrScannerComponent = ({ size }: { size: number }) => {
           {
             returnDetailedScanResult: true,
             highlightScanRegion: false,
-            highlightCodeOutline: false,
+            highlightCodeOutline: true,
             calculateScanRegion,
             overlay: overlayRef.current || undefined,
           }
@@ -242,10 +244,10 @@ const QrScannerComponent = ({ size }: { size: number }) => {
               opacity: [0.5, 1, 0.5],
             }}
           >
-            <div className="absolute -top-1 -left-1 w-12 h-12 border-t-[4px] border-l-[4px] border-white rounded-tl-3xl" />
-            <div className="absolute -top-1 -right-1 w-12 h-12 border-t-[4px] border-r-[4px] border-white rounded-tr-3xl" />
-            <div className="absolute -bottom-1 -left-1 w-12 h-12 border-b-[4px] border-l-[4px] border-white rounded-bl-3xl" />
-            <div className="absolute -bottom-1 -right-1 w-12 h-12 border-b-[4px] border-r-[4px] border-white rounded-br-3xl" />
+            <div className="absolute -top-1 -left-1 w-10 h-10 border-t-[4px] border-l-[4px] border-white rounded-tl-3xl" />
+            <div className="absolute -top-1 -right-1 w-10 h-10 border-t-[4px] border-r-[4px] border-white rounded-tr-3xl" />
+            <div className="absolute -bottom-1 -left-1 w-10 h-10 border-b-[4px] border-l-[4px] border-white rounded-bl-3xl" />
+            <div className="absolute -bottom-1 -right-1 w-10 h-10 border-b-[4px] border-r-[4px] border-white rounded-br-3xl" />
           </motion.div>
         </div>
       </div>
