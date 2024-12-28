@@ -10,6 +10,7 @@ import {
   CopyIcon,
 } from "lucide-react";
 import { motion } from "framer-motion";
+import useMediaQuery from "../hooks/use-media-query";
 
 const QrScannerComponent = ({ size }: { size: number }) => {
   const fileRef = useRef<HTMLInputElement>(null);
@@ -24,6 +25,23 @@ const QrScannerComponent = ({ size }: { size: number }) => {
   );
   const [isFlashlightOn, setIsFlashlightOn] = useState<boolean>(false);
   const [videoSize, setVideoSize] = useState({ width: size, height: size });
+  const isMobile = useMediaQuery("(max-width: 768px)");
+
+  const calculateScanRegion = (): QrScanner.ScanRegion => {
+    const smallestDimension = Math.min(window.innerWidth, window.innerHeight);
+    const scanRegionSize = isMobile
+      ? Math.round(smallestDimension * 0.6)
+      : Math.round(smallestDimension * 0.4);
+    const offsetX = Math.round((window.innerWidth - scanRegionSize) / 2);
+    const offsetY = Math.round((window.innerHeight - scanRegionSize) / 2);
+
+    return {
+      x: offsetX,
+      y: offsetY,
+      width: scanRegionSize,
+      height: scanRegionSize,
+    };
+  };
 
   useEffect(() => {
     const updateVideoSize = () => {
